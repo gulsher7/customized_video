@@ -152,6 +152,8 @@ const VideoControls: React.FC<VideoControlsProps> = (props) => {
         {/* Top row - title and buttons */}
         <TopBar {...topBarProps} />
 
+
+
         {/* Center controls */}
         <View style={centerControlsStyle}>
           {/* Playback controls */}

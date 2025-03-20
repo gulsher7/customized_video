@@ -3,8 +3,8 @@ import { initialIsTablet } from '../../utils/deviceUtils';
 
 export const createDynamicStyles = (isTablet: boolean, isLandscape: boolean) => {
   // Calculate the correct sizes for thumbnails based on device
-  const thumbnailWidth = isTablet ? 120 : 80;
-  const thumbnailHeight = isTablet ? 70 : 45;
+  const thumbnailWidth = isTablet ? 180 : 140;
+  const thumbnailHeight = isTablet ? 110 : 80;
 
   return {
     videoContainer: {
@@ -28,6 +28,8 @@ export const createDynamicStyles = (isTablet: boolean, isLandscape: boolean) => 
     timeText: {
       fontSize: isTablet ? 18 : 14,
       width: isTablet ? 70 : 50,
+      color: '#FFFFFF',
+      textAlign: 'center',
     },
     seekbar: {
       height: isTablet ? 40 : 30,
@@ -68,40 +70,20 @@ export const createDynamicStyles = (isTablet: boolean, isLandscape: boolean) => 
       width: thumbnailWidth,
       height: thumbnailHeight,
       backgroundColor: '#000',
-      borderRadius: 4,
-      justifyContent: 'center',
-      alignItems: 'center',
+      borderRadius: 2,
       overflow: 'hidden',
-      borderWidth: 2,
-      borderColor: '#E50914',
     },
     thumbnailTimestamp: {
-      fontSize: isTablet ? 20 : 16,
+      fontSize: 22,
       color: '#FFFFFF',
       fontWeight: 'bold',
       textAlign: 'center',
     },
     thumbnailPreview: {
-      // Position further above the seekbar on iPad
-      bottom: isTablet ? 60 : 45,
-      // Make the thumbnail more visible and properly positioned
+      // Position is handled directly in ThumbnailPreview.tsx for precise alignment
       position: 'absolute',
-      alignItems: 'center',
-      justifyContent: 'center',
       zIndex: 10000,
-      // Add shadow for better visibility
-      ...Platform.select({
-        ios: {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.5,
-          shadowRadius: 2,
-        },
-        android: {
-          elevation: 5,
-        },
-      }),
-    }
+    },
   };
 };
 

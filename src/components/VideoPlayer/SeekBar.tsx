@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Text, View } from 'react-native';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { Text, View, LayoutChangeEvent } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { styles } from './styles';
 import { formatTime } from '../../utils/timeFormatter';
@@ -38,6 +38,12 @@ const SeekBar: React.FC<SeekBarProps> = ({
   const [displayedRemainingTime, setDisplayedRemainingTime] = useState(formatTime(Math.max(0, duration - currentTime)));
   // Track the last dragged value to prevent jumps
   const [lastDraggedValue, setLastDraggedValue] = useState<number | null>(null);
+  // Store slider track layout for proper thumbnail positioning
+  const [sliderTrackWidth, setSliderTrackWidth] = useState(0);
+  const [sliderTrackX, setSliderTrackX] = useState(0);
+  const [containerPaddingLeft, setContainerPaddingLeft] = useState(0);
+  const [timeTextWidth, setTimeTextWidth] = useState(0);
+  const sliderViewRef = useRef(null);
   
   // Only update display time when not dragging or seeking
   useEffect(() => {
@@ -70,18 +76,47 @@ const SeekBar: React.FC<SeekBarProps> = ({
     onSliderSlidingComplete(value);
   }, [onControlInteraction, onSliderSlidingComplete, duration]);
 
+  // Handle time text layout to calculate its width
+  const handleTimeTextLayout = useCallback((event: LayoutChangeEvent) => {
+    const { width } = event.nativeEvent.layout;
+    setTimeTextWidth(width);
+  }, []);
+
+  // Calculate the horizontal offset needed for accurate thumbnail positioning
+  const horizontalOffset = useMemo(() => {
+    // Include the padding, time text width, and slider horizontal margin
+    const offset = containerPaddingLeft + timeTextWidth + dynamicStyles.seekbar.marginHorizontal;
+    
+    // Return the offset
+    return offset;
+  }, [containerPaddingLeft, timeTextWidth, dynamicStyles.seekbar.marginHorizontal]);
+
   // Optimize thumbnail position calculation, especially important for iPad performance
   const thumbnailPosition = useMemo(() => {
     // Pass the current dragged/displayed time for accurate positioning
     const timeToUse = isDragging || seeking ? displayTime : currentTime;
-    return getThumbnailPosition(timeToUse);
+    
+    // Calculate raw position as percentage of slider width
+    const percentage = timeToUse / duration;
+    
+    // Calculate the actual horizontal position including offsets
+    // First get the slider track width (without the time displays)
+    const actualSliderWidth = sliderTrackWidth - (2 * timeTextWidth);
+    
+    // Now calculate the position within the slider
+    const positionInSlider = percentage * actualSliderWidth;
+    
+    // Add the horizontal offset to get the absolute position
+    return horizontalOffset + positionInSlider;
   }, [
-    // Reduce dependency list to minimum required for accurate calculation
     displayTime, 
     currentTime,
     isDragging,
     seeking,
-    getThumbnailPosition
+    duration,
+    sliderTrackWidth,
+    timeTextWidth,
+    horizontalOffset
   ]);
 
   // Memoize slider value to reduce re-renders
@@ -118,11 +153,25 @@ const SeekBar: React.FC<SeekBarProps> = ({
   );
 
   // Memoize layout handler to prevent recreation on each render
-  const handleLayout = useCallback((event: { nativeEvent: { layout: { width: number } } }) => {
-    const { width } = event.nativeEvent.layout;
-    // Set the slider width, accounting for any padding that might affect positioning
+  const handleLayout = useCallback((event: LayoutChangeEvent) => {
+    const { width, x } = event.nativeEvent.layout;
+    // Calculate the left padding/margin from the container's layout
+    setContainerPaddingLeft(x);
+    // Set the slider width for overall use
     setSliderWidth(width);
+    setSliderTrackWidth(width);
+    setSliderTrackX(x);
   }, [setSliderWidth]);
+
+  // Handle slider view layout
+  const handleSliderViewLayout = useCallback((event: LayoutChangeEvent) => {
+    const { width } = event.nativeEvent.layout;
+    // This is the actual width of the slider container
+    setSliderTrackWidth(width);
+  }, []);
+
+  // Show thumbnail only when dragging/seeking
+  const shouldShowThumbnail = isDragging || seeking;
 
   return (
     <View
@@ -130,10 +179,22 @@ const SeekBar: React.FC<SeekBarProps> = ({
       onLayout={handleLayout}
     >
       {/* Thumbnail preview is positioned absolutely relative to this container */}
-      {seeking && <ThumbnailPreview {...thumbnailProps} />}
+      {shouldShowThumbnail && <ThumbnailPreview {...thumbnailProps} />}
+
+      {/* Time display for current position */}
+      {/* <Text 
+        style={timeTextStyle}
+        onLayout={handleTimeTextLayout}
+      >
+        {formatTime(isDragging ? displayTime : currentTime)}
+      </Text> */}
 
       {/* Slider to control video position */}
-      <View style={{flex: 1, position: 'relative'}}>
+      <View 
+        style={{flex: 1, position: 'relative' as const}}
+        ref={sliderViewRef}
+        onLayout={handleSliderViewLayout}
+      >
         <Slider
           style={sliderStyle}
           minimumValue={0}
@@ -148,8 +209,10 @@ const SeekBar: React.FC<SeekBarProps> = ({
         />
       </View>
       
-      {/* Only show remaining time using the cached formatted value */}
-      <Text style={timeTextStyle}>{displayedRemainingTime}</Text>
+      {/* Time display for remaining time */}
+      <Text style={timeTextStyle}>
+        {displayedRemainingTime}
+      </Text>
     </View>
   );
 };

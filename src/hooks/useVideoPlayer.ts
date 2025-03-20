@@ -138,10 +138,9 @@ const useVideoPlayer = (): UseVideoPlayerReturn => {
     // Calculate position as a percentage of the track
     const ratio = timeToUse / duration;
     
-    // Calculate the full width of the slider track
-    // For precise positioning, we need to calculate the exact position of the thumb
-    // The thumb is positioned at a percentage along the track corresponding to timeToUse/duration
-    return ratio * sliderWidth; // This gives the exact center position of the thumb
+    // Return the raw slider position as a percentage of the available track width
+    // We'll handle the actual positioning in the SeekBar component
+    return ratio * sliderWidth;
   };
 
   return {
