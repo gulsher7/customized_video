@@ -56,13 +56,13 @@ const BottomBar: React.FC<BottomBarProps> = ({
         <Text style={styles.buttonText}>Episodes</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity 
+      {/* <TouchableOpacity 
         style={styles.subtitlesButton}
         onPress={handleControlInteraction}
       >
         <Icon name="text-outline" size={24} color="#FFF" />
         <Text style={styles.buttonText}>Audio & Subtitles</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       <TouchableOpacity 
         style={styles.subtitlesButton}

@@ -128,30 +128,20 @@ const useVideoPlayer = (): UseVideoPlayerReturn => {
     }, 50);
   };
 
-  // Update the getThumbnailPosition to use the current drag value
+  // Calculate thumbnail position with device-specific adjustments
   const getThumbnailPosition = (displayTimeOverride?: number) => {
     if (duration === 0 || sliderWidth === 0) return 0;
 
-    // If a specific display time is provided (from slider dragging), use that
-    // Otherwise use the current time
-    const timeForCalculation = displayTimeOverride !== undefined ? displayTimeOverride : currentTime;
+    // Use specified time or current time
+    const timeToUse = displayTimeOverride !== undefined ? displayTimeOverride : currentTime;
     
-    // Calculate the visible track width (excluding padding and thumb width)
-    // Standard thumb width is approximately 24px for mobile, 30px for tablet
-    const thumbWidth = initialIsTablet ? 30 : 24;
-    const trackPadding = 16; // Standard slider padding
+    // Calculate position as a percentage of the track
+    const ratio = timeToUse / duration;
     
-    // Usable slider width excluding thumb width and padding
-    const usableTrackWidth = sliderWidth - (thumbWidth + trackPadding * 2);
-    
-    // Start position of the track (after left padding + half thumb width)
-    const trackStartPosition = trackPadding + (thumbWidth / 2);
-    
-    // Calculate position including the offset
-    const ratio = timeForCalculation / duration;
-    const rawPosition = trackStartPosition + (ratio * usableTrackWidth);
-
-    return rawPosition;
+    // Calculate the full width of the slider track
+    // For precise positioning, we need to calculate the exact position of the thumb
+    // The thumb is positioned at a percentage along the track corresponding to timeToUse/duration
+    return ratio * sliderWidth; // This gives the exact center position of the thumb
   };
 
   return {

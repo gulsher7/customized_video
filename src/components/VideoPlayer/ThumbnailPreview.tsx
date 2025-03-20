@@ -10,6 +10,7 @@ interface ThumbnailPreviewProps {
   dynamicStyles: any;
 }
 
+// Performance-optimized ThumbnailPreview component
 const ThumbnailPreview: React.FC<ThumbnailPreviewProps> = ({
   currentTime,
   position,
@@ -19,22 +20,37 @@ const ThumbnailPreview: React.FC<ThumbnailPreviewProps> = ({
   // Get the thumbnail width for proper centering
   const thumbnailWidth = dynamicStyles.thumbnailContent.width;
   
+  // Memoize the formatted time to prevent recalculation on every render
+  const formattedTime = useMemo(() => 
+    formatTime(currentTime), 
+    [currentTime]
+  );
+  
   // Calculate thumbnail styles, including transforms
   const thumbnailStyles = useMemo(() => {
-    // Create transform array with horizontal centering
-    const transforms = [{ translateX: -(thumbnailWidth / 2) }];
-    
     return {
-      // Position the preview at the calculated position
+      // Position the preview precisely at the thumb position
       left: position,
       opacity: opacity,
       // Ensure perfect centering by precisely translating half the width
-      transform: transforms,
+      transform: [{ translateX: -(thumbnailWidth / 2) }],
       // Add a stable bottom position to prevent vertical jumping
       position: 'absolute',
       zIndex: 10000,
     };
   }, [position, opacity, thumbnailWidth]);
+  
+  // Memoize content styles to prevent recreation
+  const contentStyles = useMemo(() => 
+    [styles.thumbnailContent, dynamicStyles.thumbnailContent],
+    [dynamicStyles.thumbnailContent]
+  );
+  
+  // Memoize text styles to prevent recreation
+  const textStyles = useMemo(() => 
+    [styles.thumbnailTimestamp, dynamicStyles.thumbnailTimestamp],
+    [dynamicStyles.thumbnailTimestamp]
+  );
   
   // Memoize arrow styles to prevent recreation
   const arrowStyles = useMemo(() => 
@@ -51,9 +67,9 @@ const ThumbnailPreview: React.FC<ThumbnailPreviewProps> = ({
       ]}
       pointerEvents="none"
     >
-      <View style={[styles.thumbnailContent, dynamicStyles.thumbnailContent]}>
-        <Text style={[styles.thumbnailTimestamp, dynamicStyles.thumbnailTimestamp]}>
-          {formatTime(currentTime)}
+      <View style={contentStyles}>
+        <Text style={textStyles}>
+          {formattedTime}
         </Text>
       </View>
       {/* Center the arrow under the thumbnail */}
@@ -62,4 +78,5 @@ const ThumbnailPreview: React.FC<ThumbnailPreviewProps> = ({
   );
 };
 
-export default ThumbnailPreview; 
+// Wrap with React.memo to prevent unnecessary re-renders
+export default React.memo(ThumbnailPreview); 

@@ -67,14 +67,40 @@ export const createDynamicStyles = (isTablet: boolean, isLandscape: boolean) => 
     thumbnailContent: {
       width: thumbnailWidth,
       height: thumbnailHeight,
+      backgroundColor: '#000',
+      borderRadius: 4,
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden',
+      borderWidth: 2,
+      borderColor: '#E50914',
     },
     thumbnailTimestamp: {
       fontSize: isTablet ? 20 : 16,
+      color: '#FFFFFF',
+      fontWeight: 'bold',
+      textAlign: 'center',
     },
     thumbnailPreview: {
-      bottom: isTablet ? 60 : 45, // Position further above the seekbar on iPad
-      // For iPad, ensure the thumbnail is large enough to be usable
-      transform: isTablet ? [{ scale: 1.2 }] : [],
+      // Position further above the seekbar on iPad
+      bottom: isTablet ? 60 : 45,
+      // Make the thumbnail more visible and properly positioned
+      position: 'absolute',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 10000,
+      // Add shadow for better visibility
+      ...Platform.select({
+        ios: {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.5,
+          shadowRadius: 2,
+        },
+        android: {
+          elevation: 5,
+        },
+      }),
     }
   };
 };

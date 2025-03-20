@@ -120,6 +120,7 @@ const SeekBar: React.FC<SeekBarProps> = ({
   // Memoize layout handler to prevent recreation on each render
   const handleLayout = useCallback((event: { nativeEvent: { layout: { width: number } } }) => {
     const { width } = event.nativeEvent.layout;
+    // Set the slider width, accounting for any padding that might affect positioning
     setSliderWidth(width);
   }, [setSliderWidth]);
 
@@ -128,11 +129,11 @@ const SeekBar: React.FC<SeekBarProps> = ({
       style={containerStyle}
       onLayout={handleLayout}
     >
-      {/* Position thumbnail preview relative to the seekbar container */}
+      {/* Thumbnail preview is positioned absolutely relative to this container */}
       {seeking && <ThumbnailPreview {...thumbnailProps} />}
 
       {/* Slider to control video position */}
-      <View style={{flex: 1}}>
+      <View style={{flex: 1, position: 'relative'}}>
         <Slider
           style={sliderStyle}
           minimumValue={0}

@@ -106,7 +106,15 @@ const VideoPlayer: React.FC = () => {
           <View style={[styles.videoContainer, dynamicStyles.videoContainer]}>
             <Video
               ref={videoRef}
-              source={{ uri: videoUri }}
+              source={{ 
+                uri: videoUri,
+                bufferConfig: {
+                  minBufferMs: 15000,
+                  maxBufferMs: 50000,
+                  bufferForPlaybackMs: 2500,
+                  bufferForPlaybackAfterRebufferMs: 5000
+                }
+              }}
               style={styles.video}
               resizeMode="cover"
               paused={paused}
@@ -116,12 +124,7 @@ const VideoPlayer: React.FC = () => {
               fullscreen={false}
               onProgress={handleVideoProgress}
               onEnd={handleVideoEnd}
-              bufferConfig={{
-                minBufferMs: 15000,
-                maxBufferMs: 50000,
-                bufferForPlaybackMs: 2500,
-                bufferForPlaybackAfterRebufferMs: 5000
-              }}
+              progressUpdateInterval={1000}
             />
 
             {showControls && (

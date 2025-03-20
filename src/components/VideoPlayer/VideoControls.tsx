@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useCallback, useMemo } from 'react';
-import { View, TouchableWithoutFeedback } from 'react-native';
+import { View, TouchableWithoutFeedback, Platform } from 'react-native';
 import { styles } from './styles';
 import TopBar from './TopBar';
 import PlaybackControls from './PlaybackControls';
 import SeekBar from './SeekBar';
 import BottomBar from './BottomBar';
 import { UseVideoPlayerReturn } from '../../hooks/useVideoPlayer';
+import { initialIsTablet } from '../../utils/deviceUtils';
 
 interface VideoControlsProps extends UseVideoPlayerReturn {
   dynamicStyles: any;
@@ -36,6 +37,9 @@ const VideoControls: React.FC<VideoControlsProps> = (props) => {
 
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isControlInteractionRef = useRef(false);
+  
+  // Longer hide timeout for iPad for better usability on larger screens
+  const hideDelay = initialIsTablet ? 8000 : 5000; // 8 seconds for iPad, 5 for phones
 
   // Function to start or restart the hide timer
   const startHideTimer = useCallback(() => {
@@ -44,21 +48,21 @@ const VideoControls: React.FC<VideoControlsProps> = (props) => {
       clearTimeout(hideTimeoutRef.current);
     }
     
-    // Set new timeout to hide controls after 5 seconds
+    // Set new timeout to hide controls after the appropriate delay
     hideTimeoutRef.current = setTimeout(() => {
       // Only hide if not paused, not seeking, and not interacting with controls
       if (!paused && !seeking && !isControlInteractionRef.current) {
         setShowControls(false);
       }
-      // Reset the interaction flag after the timer fires
-      isControlInteractionRef.current = false;
-    }, 5000);
-  }, [paused, seeking, setShowControls]);
+    }, hideDelay);
+  }, [paused, seeking, setShowControls, hideDelay]);
 
-  // Auto-hide controls after 5 seconds of inactivity
+  // Auto-hide controls after inactivity if no interaction is happening
   useEffect(() => {
-    // Start timer when component mounts or when paused/seeking state changes
-    startHideTimer();
+    // Only start the hide timer if no control is being interacted with
+    if (!isControlInteractionRef.current) {
+      startHideTimer();
+    }
 
     // Clear timeout when component unmounts
     return () => {
@@ -68,23 +72,24 @@ const VideoControls: React.FC<VideoControlsProps> = (props) => {
     };
   }, [paused, seeking, startHideTimer]);
 
-  // Reset timer when user interacts with the video surface (background)
+  // Reset timer when user taps on the video surface (background)
   const handleBackgroundInteraction = useCallback(() => {
-    // Only restart the timer if we're not interacting with controls
-    if (!isControlInteractionRef.current) {
-      startHideTimer();
-    }
-    // Reset the flag after handling the background interaction
+    // Reset the control interaction flag since user tapped on background
     isControlInteractionRef.current = false;
+    // Start hide timer
+    startHideTimer();
   }, [startHideTimer]);
 
   // Called when user interacts with any control
   const handleControlInteraction = useCallback(() => {
-    // Set the flag to indicate control interaction
+    // Set the flag to indicate control interaction is happening
     isControlInteractionRef.current = true;
-    // Restart the hide timer
-    startHideTimer();
-  }, [startHideTimer]);
+    
+    // Clear any existing hide timeout to prevent controls from disappearing
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+    }
+  }, []);
 
   // Memoize props for child components to prevent unnecessary renders
   const topBarProps = useMemo(() => ({
